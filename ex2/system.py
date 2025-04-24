@@ -1,7 +1,9 @@
 import pandas as pd
+import math
 from core import Core
 from component import Component
 from task import Task
+
 
 class System:
     def __init__(self, tasks_file: str, arch_file: str, budgets_file: str):
@@ -19,9 +21,11 @@ class System:
         self.cores = {}
         self.components = {}
         self.tasks = {}
-    
-    
+
     def load_inputs(self):
+        '''
+        Loads inputs from given csv file names, store them in their respective dictionaries        
+        '''
         arch_df = pd.read_csv(self.arch_file)
         for _, row in arch_df.iterrows():
             core_id = row['core_id']
@@ -46,3 +50,42 @@ class System:
             component_id = row['component_id']
             priority = row['priority']
             self.tasks[name] = Task(name, wcet, period, priority, component_id)
+
+    def assign_tasks_to_components(self):
+        """
+        Add tasks to components and add components to cores
+        """
+        for task in self.tasks.values():
+            component = self.components[task.component_id]
+            component.tasks.append(task)
+            self.cores[component.core_id].components.append(component)
+
+    def half_half_algorithm(self, budget, period):
+        """
+        Implements the Half-Half Algorithm for real-time systems.
+        This algorithm calculates two parameters, alpha and delta, based on 
+        the given budget and period. These parameters can be used for 
+        scheduling or resource allocation in real-time systems.
+        Parameters:
+        -----------
+        budget : float
+            The allocated execution time or computational budget.
+        period : float
+            The time period over which the budget is allocated.
+        Returns:
+        --------
+        alpha : represents the utilization factor, calculated as the ratio 
+          of budget to period.
+        delta : represents a derived parameter, calculated as twice the 
+          difference between the period and the budget.
+        """
+        alpha = budget / period
+        delta = 2 * (period - budget)
+        return alpha, delta
+
+    def hyperperiod(self):
+        """
+        Mainly used to determine how long the simulation would run.
+        """
+        periods = [task.period for task in self.tasks.values()]
+        return lcm(*periods) if periods else 1

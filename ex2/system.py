@@ -1,5 +1,5 @@
 import pandas as pd
-import math
+from math import lcm
 from core import Core
 from component import Component
 from task import Task

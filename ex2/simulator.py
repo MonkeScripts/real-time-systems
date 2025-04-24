@@ -1,5 +1,7 @@
 import simpy
 from math import floor
+import numpy as np
+import pandas as pd
 from system import System
 from core import Core
 from component import Component
@@ -170,4 +172,31 @@ class Simulator:
     def run_simulation(self):
         for core in self.system.core.values():
             self.env.process(self.process_core(core))
-        self.env.run(until=self.system.hyperperiod)
+        self.env.run(until=self.system.hyperperiod())
+    
+    def report(self):
+        results = []
+        # A boolean value indicating if all tasks within the component were schedulable.
+        for core in self.system.cores.values():
+            for component in core.components:
+                component_schedulable = True
+                # list of tuples that contains (task_name, task_schedulable)
+                task_details = []
+                for task in component.tasks:
+                    avg_response_time = np.mean(np.array(task.response_times))
+                    max_response_time = np.max(np.array(task.response_times))
+                    task_schedulable = all(rt <= task.deadline for rt in task.response_times) if task.response_times else True
+                    component_schedulable &= task_schedulable
+                    task_details.append({
+                        'task_name': task.name,
+                        'task_schedulable': task_schedulable,
+                        'avg_response_time': avg_response_time,
+                        'max_response_time': max_response_time
+                    })
+                results.append({
+                    'component_id': component.id,
+                    'component_schedulable': component_schedulable,
+                    'task_summary': task_details
+                })
+        pd.DataFrame(results).to_csv('results.csv', index=False)
+        print("Generated sim results")

@@ -13,3 +13,7 @@ class Core:
         self.speed_factor = speed_factor
         self.scheduler = scheduler
         self.components = []
+
+        def __str__(self):
+            return (f"Core(core_id={self.core_id}, speed_factor={self.speed_factor}, "
+                    f"scheduler={self.scheduler}, components={self.components})")

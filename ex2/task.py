@@ -20,11 +20,16 @@ class Task:
             wcet (float): Worst case execution time
             period (float): Fixed amount of time between when one instance of the task starts (or becomes ready to run) and when the next instance begins.
             priority (float): Priority of the task compared to other tasks
+            deadline (float): Equal to the period as mentioned by the project description
         """
         self.name  = name
         self.wcet = wcet
         self.period = period
         self.component_id = component_id
         self.priority = priority if priority is not None else float('inf')
+        self.deadline = period
         # Store all the response times every period
         self.response_times= []
+
+    def __str__(self):
+        return (f"task {self.name} with wcet:{self.wcet}, period:{self.period}, component_id:{self.component_id}, priority{self.priority}")

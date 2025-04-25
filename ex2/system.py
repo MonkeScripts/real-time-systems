@@ -21,6 +21,9 @@ class System:
         self.cores = {}
         self.components = {}
         self.tasks = {}
+        self.load_inputs()
+        self.assign_components_to_cores()
+        self.assign_tasks_to_components()
 
     def load_inputs(self):
         '''
@@ -44,46 +47,31 @@ class System:
 
         tasks_df = pd.read_csv(self.tasks_file)
         for _, row in tasks_df.iterrows():
-            name = row['name']
+            name = row['task_name']
             wcet = row['wcet']
             period = row['period']
             component_id = row['component_id']
             priority = row['priority']
-            self.tasks[name] = Task(name, wcet, period, priority, component_id)
+            self.tasks[name] = Task(name, wcet, period, component_id, priority)
+        print(f"loaded dataframes: \n{arch_df}\n{budgets_df}\n{tasks_df}")
 
     def assign_tasks_to_components(self):
         """
-        Add tasks to components and add components to cores
+        Add tasks to components
         """
         for task in self.tasks.values():
             component = self.components[task.component_id]
             component.tasks.append(task)
-            self.cores[component.core_id].components.append(component)
-
-    def half_half_algorithm(self, budget, period):
+    
+    def assign_components_to_cores(self):
         """
-        Implements the Half-Half Algorithm for real-time systems.
-        This algorithm calculates two parameters, alpha and delta, based on 
-        the given budget and period. These parameters can be used for 
-        scheduling or resource allocation in real-time systems.
-        Parameters:
-        -----------
-        budget : float
-            The allocated execution time or computational budget.
-        period : float
-            The time period over which the budget is allocated.
-        Returns:
-        --------
-        alpha : represents the utilization factor, calculated as the ratio 
-          of budget to period.
-        delta : represents a derived parameter, calculated as twice the 
-          difference between the period and the budget.
+        Add components to cores
         """
-        alpha = budget / period
-        delta = 2 * (period - budget)
-        return alpha, delta
+        for component in self.components.values():
+            core = self.cores[component.core_id]
+            core.components.append(component)
 
-    def hyperperiod(self):
+    def get_hyperperiod(self) -> int:
         """
         Mainly used to determine how long the simulation would run.
         """

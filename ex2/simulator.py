@@ -6,197 +6,186 @@ from system import System
 from core import Core
 from component import Component
 from task import Task
+from collections import defaultdict
+
 
 class Simulator:
     def __init__(self, system: System):
-        """
-        A class representing a Simulator
-
-        Attributes:
-            system (System): System of the simulator
-            environment (simpy Environment): simpy Environment
-        """
         self.system = system
         self.environment = simpy.Environment()
-        self.resource = {core.core_id: simpy.Resource(self.environment, capacity=1) for core in self.system.core.values()}
+        self.resource = {
+            core.core_id: simpy.Resource(self.environment, capacity=1)
+            for core in self.system.cores.values()
+        }
+        # Track remaining WCET: {task: {instance: remaining_wcet}}
+        self.remaining_wcet = defaultdict(lambda: defaultdict(float))
 
-    def schedule_edf(self, items, time:float, is_task=True):
-        """
-        Schedules items based on the Earliest Deadline First (EDF) algorithm.
-
-        This method sorts a list of items (either tasks or components) by their 
-        earliest deadline. For tasks, the deadline is calculated based on the 
-        task deadline + task_period * number of iterations. For components, the sorting is based 
-        on their the supposed next period the task should be running.
-
-        Args:
-            items (list): A list of items to be scheduled. Each item is expected 
-                          to have attributes `deadline` and `period` if `is_task` 
-                          is True, or just `period` if `is_task` is False.
-            time (float): The current time, used to calculate the next deadline 
-                          for each item.
-            is_task (bool, optional): A flag indicating whether the items are 
-                                      tasks (True) or components (False). 
-                                      Defaults to True.
-
-        Returns:
-            list: A sorted list of items based on their earliest deadline.
-        """
+    def schedule_edf(self, items, time: float, is_task=True):
         if is_task:
-            return sorted(items, key= lambda t: t.deadline + t.period * floor(time / t.period))
-        return sorted(items, key= lambda c: c.period + c.period * floor(time / c.period))
+            return sorted(items, key=lambda t: t.period * (floor(time / t.period) + 1))
+        return sorted(items, key=lambda c: c.period * (floor(time / c.period) + 1))
 
-    # TODO FIGURE OUT HOW THE PRIORITY IS CALCULATED - CHECK AGAINST PERIOD
-    # TODO check whether it should be ascending or descending
     def schedule_rm(self, items):
-        """
-        Schedules a list of items using the Rate Monotonic (RM) scheduling algorithm.
-        The RM scheduling algorithm prioritizes tasks based on their priority value,        Args:
-            items (list): A list of either Task or Component, where each item is expected to have a 
-                          'priority' attribute.
-        Returns:
-            list: A sorted list of items, ordered by their priority in ascending order.
-        """
+        return sorted(items, key=lambda a: a.priority)
 
-        return sorted(items, key= lambda a: a.priority)
+    def process_task(
+        self, task: Task, core: Core, execution_time: float, instance: int
+    ):
+        with self.resource[core.core_id].request() as req:
+            yield req
+            yield self.environment.timeout(execution_time)
+            self.remaining_wcet[task][instance] -= execution_time
+            if abs(self.remaining_wcet[task][instance]) < 1e-6:  # Job completed
+                release_time = task.period * instance
+                response_time = self.environment.now - release_time
+                task.response_times.append(response_time)
+                del self.remaining_wcet[task][instance]
+                print(
+                    f"Component {task.component_id}: Task {task.name} (instance {instance}) completed"
+                )
 
-    def process_task(self, task: Task, core: Core, remaining_wcet: float):
+    def process_component(self, component: Component, core: Core):
         """
-        Simulates the processing of a task on a specific core.
-        Args:
-            task (Task): The task to be processed.
-            core (Core): The core on which the task will be executed.
-            remaining_wcet (float): The remaining worst-case execution time (WCET) of the task to be processed.
-        Yields:
-            SimPy events:
-            - A request for the core's resource, simulating the task acquiring 
-              the core for execution.
-            - A timeout event, representing the time taken to execute the task 
-              based on the core's speed factor.
-        Side Effects:
-            Updates the task's response_times list with the current simulation time 
-            modulo the task's period, representing the task's response time.
+        Simulates the processing of a component on a given core.
+        Unified scheduling loop for full utilization and normal BDR cases.
+        Tracks task completion to ensure all tasks execute correctly.
         """
-        yield self.resource[core.core_id].request()
-        execution_time = remaining_wcet * core.speed_factor
-        yield self.environment.timeout(execution_time)
-        # TODO check this, why modulo??
-        task.response_times.append(self.environment.now % task.period)
+        # Set period and budget
+        period = component.bdr_delta / 2
+        if abs(component.bdr_alpha - 1.0) < 1e-6:  # Full utilization
+            budget = float("inf")  # Unlimited budget
+        else:
+            budget = component.bdr_alpha * period
+            print(
+                f"Component {component.id}: bdr_delta/2 = {period}, budget = {budget}"
+            )
 
-    def process_component(self, component: Component, core:Core):
-        """
-        Simulates the processing of a component on a given core in a real-time system.
-        This method models the execution of tasks within a component, adhering to the 
-        specified scheduling policy (e.g., EDF or RM). It accounts for task deadlines, 
-        available budget, and the core's speed factor to determine the execution behavior.
-        Args:
-            component (Component): The component containing tasks to be processed. 
-            core (Core): The core on which the component's tasks are executed. 
-        Yields:
-            simpy.events.Timeout: A timeout event representing the periodic execution 
-                                    of the component.
-            simpy.events.Process: A process event for executing individual tasks.
-        Raises:
-            ValueError: If the specified scheduler type in the component is not supported.
-        Notes:
-            - The method uses the component's scheduler type to determine the scheduling 
-                policy (e.g., EDF or RM).
-            - Tasks are scheduled based on their deadlines or priorities, and execution 
-                is constrained by the available budget and core speed factor.
-            - If the available budget is insufficient to execute a task fully, the task 
-                is processed up to the remaining budget.
-        """
         while True:
-            yield self.environment.timeout(component.period)
-            #TODO check whether we need the speed factor
-            available_budget = component.budget * core.speed_factor
+            yield self.environment.timeout(period)
+            available_budget = budget / core.speed_factor
+            if budget != float("inf"):
+                print(
+                    f"Component {component.id}: available_budget = {available_budget}"
+                )
+
+            # Collect active tasks
             active_tasks = []
-            scheduled_tasks = []
             for task in component.tasks:
-                task_deadline = task.deadline + task.period * floor(self.environment.now() / task.period)
-                if self.environment.now() >= task_deadline - task.period: 
-                    active_tasks.append(task_deadline)
-            if active_tasks:
-                if component.scheduler == 'EDF':
-                    scheduled_tasks = self.schedule_edf(active_tasks, self.environment.now(), True)
-                if component.scheduler == 'RM':
-                    scheduled_tasks = self.schedule_rm(active_tasks)
-                else:
-                    raise ValueError(f"Not an appropriate scheduler {component.scheduler}")
-            if scheduled_tasks:
-                for task in scheduled_tasks:
-                    if available_budget <= 0:
-                        print("No budget left")
-                        break
-                    estimated_wcet = task.wcet * core.speed_factor
-                    if estimated_wcet > available_budget:
-                        # Use up everything
-                        yield from self.process_task(task, core, available_budget)
-                        break
-                    else:
-                        yield from self.process_task(task, core, estimated_wcet)
-                        available_budget -= estimated_wcet
-                        
-    def process_core(self, core:Core):
-        """
-        Processes the components of a given core based on their scheduling policy.
-        Args:
-            core (Core): The core object containing components and scheduling policy.
-        Raises:
-            ValueError: If the core's scheduler is not recognized (neither 'EDF' nor 'RM').
-        Behavior:
-            - Continuously checks for active components whose periods align with the current
-              simulation time (`self.environment.now()`).
-            - Depending on the core's scheduler type:
-                - 'EDF' (Earliest Deadline First): Calls `schedule_edf` to determine the
-                  order of execution for active components.
-                - 'RM' (Rate Monotonic): Calls `schedule_rm` to determine the order of
-                  execution for active components.
-            - Processes the scheduled components by invoking `process_component` for each.
-        """
+                current_instance = floor(self.environment.now / task.period)
+                release_time = task.period * current_instance
+                absolute_deadline = release_time + task.deadline
+                if release_time <= self.environment.now < absolute_deadline:
+                    if current_instance not in self.remaining_wcet[task]:
+                        self.remaining_wcet[task][current_instance] = (
+                            task.wcet / core.speed_factor
+                        )
+                    active_tasks.append((task, current_instance))
 
-        while True:
-            active_components = [c for c in core.components if self.environment.now() % c.period == 0]
-            scheduled_components = []
-            if active_components:
-                if core.scheduler == 'EDF':
-                    scheduled_components = self.schedule_edf(active_components, self.environment.now(), False)
-                if core.scheduler == 'RM':
-                    scheduled_components = self.schedule_rm(active_components)
+            # Schedule tasks
+            if active_tasks:
+                if component.scheduler == "EDF":
+                    scheduled_tasks = self.schedule_edf(
+                        [t[0] for t in active_tasks], self.environment.now, True
+                    )
+                    scheduled_tasks = [
+                        (t, next(i for t2, i in active_tasks if t2 == t))
+                        for t in scheduled_tasks
+                    ]
+                elif component.scheduler == "RM":
+                    scheduled_tasks = self.schedule_rm([t[0] for t in active_tasks])
+                    scheduled_tasks = [
+                        (t, next(i for t2, i in active_tasks if t2 == t))
+                        for t in scheduled_tasks
+                    ]
                 else:
-                    raise ValueError(f"Not an appropriate scheduler {core.scheduler}")
-            if scheduled_components:
-                for component in scheduled_components:
-                    yield from self.process_component(component, core)
-    
+                    raise ValueError(f"Unsupported scheduler {component.scheduler}")
+
+                # Execute tasks
+                for task, instance in scheduled_tasks:
+                    remaining_wcet = self.remaining_wcet[task][instance]
+                    if remaining_wcet <= 0:
+                        continue  # Skip completed tasks
+                    print(
+                        f"Component {component.id}: Running task {task.name} (instance {instance}) with remaining_wcet: {remaining_wcet}, budget: {available_budget}"
+                    )
+                    if available_budget <= 0:
+                        print(f"Component {component.id}: No budget left")
+                        break
+                    execution_time = min(remaining_wcet, available_budget)
+                    yield from self.process_task(task, core, execution_time, instance)
+                    available_budget -= execution_time
+                    if budget != float("inf"):
+                        print(
+                            f"Component {component.id}: Remaining budget = {available_budget}"
+                        )
+
+    def process_core(self, core: Core):
+        while True:
+            # Prioritize full-utilization component
+            full_util_component = next(
+                (c for c in core.components if abs(c.bdr_alpha - 1.0) < 1e-6), None
+            )
+            if full_util_component:
+                yield from self.process_component(full_util_component, core)
+            else:
+                active_components = [
+                    c
+                    for c in core.components
+                    if self.environment.now % (c.bdr_delta / 2) == 0
+                ]
+                if active_components:
+                    if core.scheduler == "EDF":
+                        scheduled_components = self.schedule_edf(
+                            active_components, self.environment.now, False
+                        )
+                    elif core.scheduler == "RM":
+                        scheduled_components = self.schedule_rm(active_components)
+                    else:
+                        raise ValueError(f"Unsupported scheduler {core.scheduler}")
+
+                    for component in scheduled_components:
+                        yield from self.process_component(component, core)
+
     def run_simulation(self):
-        for core in self.system.core.values():
-            self.env.process(self.process_core(core))
-        self.env.run(until=self.system.hyperperiod())
-    
+        for core in self.system.cores.values():
+            self.environment.process(self.process_core(core))
+        hyperperiod = self.system.get_hyperperiod()
+        print(f"Running simulation until hyperperiod: {hyperperiod}")
+        self.environment.run(until=hyperperiod)
+
     def report(self):
         results = []
-        # A boolean value indicating if all tasks within the component were schedulable.
         for core in self.system.cores.values():
             for component in core.components:
                 component_schedulable = True
-                # list of tuples that contains (task_name, task_schedulable)
                 task_details = []
                 for task in component.tasks:
-                    avg_response_time = np.mean(np.array(task.response_times))
-                    max_response_time = np.max(np.array(task.response_times))
-                    task_schedulable = all(rt <= task.deadline for rt in task.response_times) if task.response_times else True
+                    avg_response_time = (
+                        np.mean(task.response_times) if task.response_times else 0
+                    )
+                    max_response_time = (
+                        np.max(task.response_times) if task.response_times else 0
+                    )
+                    task_schedulable = (
+                        all(rt <= task.deadline for rt in task.response_times)
+                        if task.response_times
+                        else True
+                    )
                     component_schedulable &= task_schedulable
-                    task_details.append({
-                        'task_name': task.name,
-                        'task_schedulable': task_schedulable,
-                        'avg_response_time': avg_response_time,
-                        'max_response_time': max_response_time
-                    })
-                results.append({
-                    'component_id': component.id,
-                    'component_schedulable': component_schedulable,
-                    'task_summary': task_details
-                })
-        pd.DataFrame(results).to_csv('results.csv', index=False)
+                    task_details.append(
+                        {
+                            "task_name": task.name,
+                            "task_schedulable": task_schedulable,
+                            "avg_response_time": avg_response_time,
+                            "max_response_time": max_response_time,
+                        }
+                    )
+                results.append(
+                    {
+                        "component_id": component.id,
+                        "component_schedulable": component_schedulable,
+                        "task_summary": task_details,
+                    }
+                )
+        pd.DataFrame(results).to_csv("results.csv", index=False)
         print("Generated sim results")

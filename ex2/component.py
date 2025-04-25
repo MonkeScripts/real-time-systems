@@ -1,3 +1,4 @@
+from collections import defaultdict
 class Component:
     def __init__(self, component_id: str, scheduler: str, budget: float, period: float, core_id: str, priority=None):
         """
@@ -21,5 +22,32 @@ class Component:
         self.core_id = core_id
         self.priority = priority if priority is not None else float('inf')
         self.tasks = []
-        self.bdr_alpha = None
-        self.bdr_delta = None
+        self.bdr_alpha, self.bdr_delta = self.half_half_algorithm(self.budget, self.period)
+
+    def __str__(self):
+        return (f"Component(id={self.id}, scheduler={self.scheduler}, budget={self.budget}, "
+                f"period={self.period}, core_id={self.core_id}, priority={self.priority}, "
+                f"tasks={len(self.tasks)}, bdr_alpha={self.bdr_alpha:.2f}, bdr_delta={self.bdr_delta:.2f})")
+
+    def half_half_algorithm(self, budget:float, period:float):
+        """
+        Implements the Half-Half Algorithm for real-time systems.
+        This algorithm calculates two parameters, alpha and delta, based on 
+        the given budget and period. These parameters can be used for 
+        scheduling or resource allocation in real-time systems.
+        Parameters:
+        -----------
+        budget : float
+            The allocated execution time or computational budget.
+        period : float
+            The time period over which the budget is allocated.
+        Returns:
+        --------
+        alpha : represents the utilization factor, calculated as the ratio 
+          of budget to period.
+        delta : represents a derived parameter, calculated as twice the 
+          difference between the period and the budget.
+        """
+        alpha = budget / period
+        delta = 2 * (period - budget)
+        return alpha, delta

@@ -62,7 +62,7 @@ class Simulator:
 
         while True:
             yield self.environment.timeout(period)
-            available_budget = budget / core.speed_factor
+            available_budget = budget
             if budget != float("inf"):
                 print(
                     f"Component {component.id}: available_budget = {available_budget}"

@@ -1,5 +1,5 @@
 import simpy
-from math import floor
+from math import floor, ceil
 import numpy as np
 import pandas as pd
 from system import System
@@ -20,17 +20,20 @@ class Simulator:
         # Track remaining WCET: {task: {instance: remaining_wcet}}
         self.remaining_wcet = defaultdict(lambda: defaultdict(float))
 
+
     def schedule_edf(self, items, time: float, is_task=True):
         if is_task:
-            return sorted(items, key=lambda t: t.period * (floor(time / t.period) + 1))
-        return sorted(items, key=lambda c: c.period * (floor(time / c.period) + 1))
+            return sorted(items, key=lambda t: t.period * floor(time / t.period) + t.period)
+        return sorted(
+            items,
+            key=lambda c: c.bdr_delta / 2 * floor(time / (c.bdr_delta / 2))
+            + c.bdr_delta / 2,
+        )
 
     def schedule_rm(self, items):
-        return sorted(items, key=lambda a: a.priority)
+        return sorted(items, key=lambda a: a.priority, reverse=True)
 
-    def process_task(
-        self, task: Task, core: Core, execution_time: float, instance: int
-    ):
+    def process_task(self, task: Task, core: Core, execution_time: float, instance: int):
         with self.resource[core.core_id].request() as req:
             yield req
             yield self.environment.timeout(execution_time)
@@ -39,10 +42,13 @@ class Simulator:
                 release_time = task.period * instance
                 response_time = self.environment.now - release_time
                 task.response_times.append(response_time)
-                del self.remaining_wcet[task][instance]
                 print(
-                    f"Component {task.component_id}: Task {task.name} (instance {instance}) completed"
+                    f"Task {task.name} (instance {instance}) completed, "
+                    f"response_time: {response_time}, all response_times: {task.response_times}"
                 )
+                del self.remaining_wcet[task][instance]  # Remove completed instance
+                if not self.remaining_wcet[task]:  # Clean up task if no instances remain
+                    del self.remaining_wcet[task]
 
     def process_component(self, component: Component, core: Core):
         """
@@ -56,24 +62,24 @@ class Simulator:
             budget = float("inf")  # Unlimited budget
         else:
             budget = component.bdr_alpha * period
-            print(
-                f"Component {component.id}: bdr_delta/2 = {period}, budget = {budget}"
-            )
+            # print(
+            #     f"Component {component.id}: period is given by bdr_delta / 2 = {period}, budget = {budget}"
+            # )
 
         while True:
             yield self.environment.timeout(period)
             available_budget = budget
-            if budget != float("inf"):
-                print(
-                    f"Component {component.id}: available_budget = {available_budget}"
-                )
+            # if budget != float("inf"):
+            #     print(
+            #         f"Component {component.id}: available_budget = {available_budget}"
+            #     )
 
             # Collect active tasks
             active_tasks = []
             for task in component.tasks:
                 current_instance = floor(self.environment.now / task.period)
                 release_time = task.period * current_instance
-                absolute_deadline = release_time + task.deadline
+                absolute_deadline = release_time + task.period
                 if release_time <= self.environment.now < absolute_deadline:
                     if current_instance not in self.remaining_wcet[task]:
                         self.remaining_wcet[task][current_instance] = (
@@ -104,20 +110,21 @@ class Simulator:
                 for task, instance in scheduled_tasks:
                     remaining_wcet = self.remaining_wcet[task][instance]
                     if remaining_wcet <= 0:
+                        print(f"Skipping task {task.name}")
                         continue  # Skip completed tasks
-                    print(
-                        f"Component {component.id}: Running task {task.name} (instance {instance}) with remaining_wcet: {remaining_wcet}, budget: {available_budget}"
-                    )
+                    # print(
+                    #     f"Component {component.id}: Running task {task.name} (instance {instance}) with remaining_wcet: {remaining_wcet}, budget: {available_budget}"
+                    # )
                     if available_budget <= 0:
-                        print(f"Component {component.id}: No budget left")
+                        # print(f"Component {component.id}: No budget left")
                         break
                     execution_time = min(remaining_wcet, available_budget)
                     yield from self.process_task(task, core, execution_time, instance)
                     available_budget -= execution_time
-                    if budget != float("inf"):
-                        print(
-                            f"Component {component.id}: Remaining budget = {available_budget}"
-                        )
+                    # if budget != float("inf"):
+                    # print(
+                    #     f"Component {component.id}: Remaining budget = {available_budget}"
+                    # )
 
     def process_core(self, core: Core):
         while True:
@@ -133,6 +140,7 @@ class Simulator:
                     for c in core.components
                     if self.environment.now % (c.bdr_delta / 2) == 0
                 ]
+                print(f"Active components at time {self.environment.now}: {[c.id for c in active_components]}")
                 if active_components:
                     if core.scheduler == "EDF":
                         scheduled_components = self.schedule_edf(
@@ -142,7 +150,7 @@ class Simulator:
                         scheduled_components = self.schedule_rm(active_components)
                     else:
                         raise ValueError(f"Unsupported scheduler {core.scheduler}")
-
+                    print(f"Scheduled components at time {self.environment.now}: {[c.id for c in scheduled_components]}")
                     for component in scheduled_components:
                         yield from self.process_component(component, core)
 
@@ -153,7 +161,7 @@ class Simulator:
         print(f"Running simulation until hyperperiod: {hyperperiod}")
         self.environment.run(until=hyperperiod)
 
-    def report(self):
+    def report(self, filename):
         results = []
         for core in self.system.cores.values():
             for component in core.components:
@@ -187,5 +195,5 @@ class Simulator:
                         "task_summary": task_details,
                     }
                 )
-        pd.DataFrame(results).to_csv("results.csv", index=False)
+        pd.DataFrame(results).to_csv(filename, index=False)
         print("Generated sim results")

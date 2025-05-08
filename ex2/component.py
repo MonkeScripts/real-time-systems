@@ -1,4 +1,5 @@
 from collections import defaultdict
+import math
 class Component:
     def __init__(self, component_id: str, scheduler: str, budget: float, period: float, core_id: str, priority=None):
         """
@@ -20,7 +21,11 @@ class Component:
         self.budget = budget
         self.period = period
         self.core_id = core_id
-        self.priority = priority if priority is not None else float('inf')
+        self.priority = (
+            priority
+            if priority is not None and not math.isnan(priority)
+            else 1.0 / self.period
+        )
         self.tasks = []
         self.bdr_alpha, self.bdr_delta = self.half_half_algorithm(self.budget, self.period)
 

@@ -9,7 +9,7 @@
 # component_id: The ID of the component to which the task is assigned (string).
 # priority: The priority of the task (integer). This column is only relevant for tasks within components that use RM scheduling.
 # For EDF components, this column will be empty. Priorities are assigned based on the Rate Monotonic (RM) principle (shorter period = higher priority).
-
+import math
 class Task:
     def __init__(self, name: str, wcet: float, period: float, component_id: str, priority=None):
         """
@@ -26,7 +26,11 @@ class Task:
         self.wcet = wcet
         self.period = period
         self.component_id = component_id
-        self.priority = priority if priority is not None else float('inf')
+        # The priority of the task (integer). 
+        # This column is only relevant for tasks within components that use RM scheduling. 
+        # For EDF components, this column will be empty. 
+        # Priorities are assigned based on the Rate Monotonic (RM) principle (shorter period = higher priority).
+        self.priority = priority if priority is not None and not math.isnan(priority) else 1.0 / period
         self.deadline = period
         # Store all the response times every period
         self.response_times= []

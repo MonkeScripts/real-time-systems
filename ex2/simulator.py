@@ -46,9 +46,8 @@ class Simulator:
                     f"Task {task.name} (instance {instance}) completed, "
                     f"response_time: {response_time}, all response_times: {task.response_times}"
                 )
-                del self.remaining_wcet[task][instance]  # Remove completed instance
-                if not self.remaining_wcet[task]:  # Clean up task if no instances remain
-                    del self.remaining_wcet[task]
+                self.remaining_wcet[task][instance] = 0.0
+   
 
     def process_component(self, component: Component, core: Core):
         """
@@ -85,7 +84,8 @@ class Simulator:
                         self.remaining_wcet[task][current_instance] = (
                             task.wcet / core.speed_factor
                         )
-                    active_tasks.append((task, current_instance))
+                    if self.remaining_wcet[task][current_instance] > 1e-6:
+                        active_tasks.append((task, current_instance))
 
             # Schedule tasks
             if active_tasks:

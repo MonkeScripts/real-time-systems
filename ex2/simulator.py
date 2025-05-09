@@ -20,7 +20,6 @@ class Simulator:
         # Track remaining WCET: {task: {instance: remaining_wcet}}
         self.remaining_wcet = defaultdict(lambda: defaultdict(float))
 
-
     def schedule_edf(self, items, time: float, is_task=True):
         if is_task:
             return sorted(items, key=lambda t: t.period * floor(time / t.period) + t.period)
@@ -47,7 +46,6 @@ class Simulator:
                     f"response_time: {response_time}, all response_times: {task.response_times}"
                 )
                 self.remaining_wcet[task][instance] = 0.0
-   
 
     def process_component(self, component: Component, core: Core):
         """
@@ -61,11 +59,12 @@ class Simulator:
             budget = float("inf")  # Unlimited budget
         else:
             budget = component.bdr_alpha * period
-            # print(
-            #     f"Component {component.id}: period is given by bdr_delta / 2 = {period}, budget = {budget}"
-            # )
+            print(
+                f"Component {component.id}: period is given by bdr_delta / 2 = {period}, budget = {budget}"
+            )
 
         while True:
+
             yield self.environment.timeout(period)
             available_budget = budget
             # if budget != float("inf"):
@@ -125,6 +124,9 @@ class Simulator:
                     # print(
                     #     f"Component {component.id}: Remaining budget = {available_budget}"
                     # )
+                else:
+                    print("ALL tasks done!")
+                    break
 
     def process_core(self, core: Core):
         while True:
@@ -152,7 +154,12 @@ class Simulator:
                         raise ValueError(f"Unsupported scheduler {core.scheduler}")
                     print(f"Scheduled components at time {self.environment.now}: {[c.id for c in scheduled_components]}")
                     for component in scheduled_components:
+                        print(f"Processing component: {component}")
                         yield from self.process_component(component, core)
+                        print("DONE with this component")
+                else:
+                    print("ALL components done!")
+                    break
 
     def run_simulation(self):
         for core in self.system.cores.values():

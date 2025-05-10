@@ -24,7 +24,7 @@ class Simulator:
             return sorted(items, key=lambda t: t.period * floor(time / t.period) + t.period)
         return sorted(
             items,
-            key=lambda c: c.bdr_delta / 2 * floor(time / (c.bdr_delta / 2))
+            key=lambda c: (c.bdr_delta / 2) * floor(time / (c.bdr_delta / 2))
             + c.bdr_delta / 2,
         )
 
@@ -77,13 +77,22 @@ class Simulator:
                 current_instance = floor(self.environment.now / task.period)
                 release_time = task.period * current_instance
                 absolute_deadline = release_time + task.period
+                print(
+                    f"Task {task} release={release_time}, deadline={absolute_deadline}, now={self.environment.now}"
+                )
                 if release_time <= self.environment.now < absolute_deadline:
                     if current_instance not in self.remaining_wcet[task]:
                         self.remaining_wcet[task][current_instance] = (
                             task.wcet / core.speed_factor
                         )
+                        print(
+                            f"Initialized WCET for Task {task}, instance {current_instance}: {self.remaining_wcet[task][current_instance]}"
+                        )
                     if self.remaining_wcet[task][current_instance] > 1e-6:
                         active_tasks.append((task, current_instance))
+                        print(
+                            f"Added Task {task}, instance {current_instance} to active_tasks"
+                        )
 
             # Schedule tasks
             if active_tasks:
@@ -123,9 +132,9 @@ class Simulator:
                     # print(
                     #     f"Component {component.id}: Remaining budget = {available_budget}"
                     # )
-                else:
-                    print("ALL tasks done!")
-                    break
+            else:
+                print("ALL tasks done!")
+                break
 
     def process_core(self, core: Core):
         while True:
@@ -135,6 +144,7 @@ class Simulator:
             )
             if full_util_component:
                 yield from self.process_component(full_util_component, core)
+                break
             else:
                 active_components = [
                     c

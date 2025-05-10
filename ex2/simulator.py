@@ -17,7 +17,6 @@ class Simulator:
             core.core_id: simpy.Resource(self.environment, capacity=1)
             for core in self.system.cores.values()
         }
-        # Track remaining WCET: {task: {instance: remaining_wcet}}
         self.remaining_wcet = defaultdict(lambda: defaultdict(float))
 
     def schedule_edf(self, items, time: float, is_task=True):
@@ -181,12 +180,9 @@ class Simulator:
                     max_response_time = (
                         np.max(task.response_times) if task.response_times else 0
                     )
-                    task_schedulable = (
-                        all(rt <= task.deadline for rt in task.response_times)
-                        if task.response_times
-                        else True
-                    )
+                    task_schedulable = (max_response_time <= task.period and max_response_time != 0 and avg_response_time != 0)
                     component_schedulable &= task_schedulable
+                    print(f"task: {task} is {task_schedulable} with max_response_time{max_response_time}, component is {component_schedulable}")
                     task_details.append(
                         {
                             "task_name": task.name,

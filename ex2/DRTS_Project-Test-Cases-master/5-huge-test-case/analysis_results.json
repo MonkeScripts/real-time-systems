@@ -1,0 +1,496 @@
+{
+    "system_schedulable": true,
+    "cores": {
+        "Core_1": {
+            "scheduler": "EDF",
+            "speed_factor": 1.21,
+            "schedulable": true
+        },
+        "Core_2": {
+            "scheduler": "RM",
+            "speed_factor": 1.34,
+            "schedulable": true
+        },
+        "Core_3": {
+            "scheduler": "RM",
+            "speed_factor": 1.16,
+            "schedulable": true
+        },
+        "Core_4": {
+            "scheduler": "EDF",
+            "speed_factor": 1.48,
+            "schedulable": true
+        },
+        "Core_5": {
+            "scheduler": "EDF",
+            "speed_factor": 0.79,
+            "schedulable": true
+        },
+        "Core_6": {
+            "scheduler": "EDF",
+            "speed_factor": 0.63,
+            "schedulable": true
+        },
+        "Core_7": {
+            "scheduler": "EDF",
+            "speed_factor": 1.39,
+            "schedulable": true
+        },
+        "Core_8": {
+            "scheduler": "EDF",
+            "speed_factor": 0.63,
+            "schedulable": true
+        }
+    },
+    "components": {
+        "Camera_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.27170798898071624,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_0": {
+                    "wcet": 3,
+                    "period": 20,
+                    "deadline": 20
+                },
+                "Task_1": {
+                    "wcet": 20,
+                    "period": 120,
+                    "deadline": 120
+                }
+            }
+        },
+        "Image_Processor": {
+            "scheduler": "EDF",
+            "bdr_alpha": 0.10366391184573003,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_2": {
+                    "wcet": 8,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_3": {
+                    "wcet": 10,
+                    "period": 300,
+                    "deadline": 300
+                }
+            }
+        },
+        "Bitmap_Processor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.2000826446280992,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_4": {
+                    "wcet": 10,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_5": {
+                    "wcet": 39,
+                    "period": 300,
+                    "deadline": 300
+                }
+            }
+        },
+        "Lidar_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.27865671641791045,
+            "bdr_delta": 7.5,
+            "schedulable": true,
+            "tasks": {
+                "Task_6": {
+                    "wcet": 34,
+                    "period": 200,
+                    "deadline": 200
+                },
+                "Task_7": {
+                    "wcet": 2,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_8": {
+                    "wcet": 2,
+                    "period": 25,
+                    "deadline": 25
+                },
+                "Task_9": {
+                    "wcet": 36,
+                    "period": 400,
+                    "deadline": 400
+                }
+            }
+        },
+        "Control_Unit": {
+            "scheduler": "EDF",
+            "bdr_alpha": 0.18412935323383084,
+            "bdr_delta": 22.5,
+            "schedulable": true,
+            "tasks": {
+                "Task_10": {
+                    "wcet": 2,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_11": {
+                    "wcet": 8,
+                    "period": 200,
+                    "deadline": 200
+                },
+                "Task_12": {
+                    "wcet": 4,
+                    "period": 300,
+                    "deadline": 300
+                },
+                "Task_13": {
+                    "wcet": 4,
+                    "period": 75,
+                    "deadline": 75
+                },
+                "Task_14": {
+                    "wcet": 12,
+                    "period": 225,
+                    "deadline": 225
+                },
+                "Task_15": {
+                    "wcet": 8,
+                    "period": 150,
+                    "deadline": 150
+                }
+            }
+        },
+        "GPS_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.09620689655172414,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_16": {
+                    "wcet": 5,
+                    "period": 125,
+                    "deadline": 125
+                },
+                "Task_17": {
+                    "wcet": 15,
+                    "period": 250,
+                    "deadline": 250
+                }
+            }
+        },
+        "Communication_Unit": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.09908045977011495,
+            "bdr_delta": 15.0,
+            "schedulable": true,
+            "tasks": {
+                "Task_18": {
+                    "wcet": 4,
+                    "period": 400,
+                    "deadline": 400
+                },
+                "Task_19": {
+                    "wcet": 2,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_20": {
+                    "wcet": 30,
+                    "period": 900,
+                    "deadline": 900
+                },
+                "Task_21": {
+                    "wcet": 2,
+                    "period": 50,
+                    "deadline": 50
+                }
+            }
+        },
+        "Proximity_Sensor": {
+            "scheduler": "EDF",
+            "bdr_alpha": 0.10482758620689656,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_22": {
+                    "wcet": 3,
+                    "period": 150,
+                    "deadline": 150
+                },
+                "Task_23": {
+                    "wcet": 8,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_24": {
+                    "wcet": 2,
+                    "period": 200,
+                    "deadline": 200
+                }
+            }
+        },
+        "Radar_Sensor": {
+            "scheduler": "EDF",
+            "bdr_alpha": 0.4964864864864865,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_25": {
+                    "wcet": 4,
+                    "period": 200,
+                    "deadline": 200
+                },
+                "Task_26": {
+                    "wcet": 45,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_27": {
+                    "wcet": 75,
+                    "period": 300,
+                    "deadline": 300
+                }
+            }
+        },
+        "Sonar_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.19018018018018018,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_28": {
+                    "wcet": 4,
+                    "period": 25,
+                    "deadline": 25
+                },
+                "Task_29": {
+                    "wcet": 8,
+                    "period": 75,
+                    "deadline": 75
+                }
+            }
+        },
+        "Laser_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.4108438818565401,
+            "bdr_delta": 3.0,
+            "schedulable": true,
+            "tasks": {
+                "Task_30": {
+                    "wcet": 1,
+                    "period": 10,
+                    "deadline": 10
+                },
+                "Task_31": {
+                    "wcet": 8,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_32": {
+                    "wcet": 29,
+                    "period": 300,
+                    "deadline": 300
+                },
+                "Task_33": {
+                    "wcet": 2,
+                    "period": 50,
+                    "deadline": 50
+                }
+            }
+        },
+        "Infrared_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.2631645569620253,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_34": {
+                    "wcet": 2,
+                    "period": 20,
+                    "deadline": 20
+                },
+                "Task_35": {
+                    "wcet": 4,
+                    "period": 50,
+                    "deadline": 50
+                },
+                "Task_36": {
+                    "wcet": 2,
+                    "period": 100,
+                    "deadline": 100
+                }
+            }
+        },
+        "Ultraviolet_Sensor": {
+            "scheduler": "EDF",
+            "bdr_alpha": 0.20620811287477953,
+            "bdr_delta": 30.0,
+            "schedulable": true,
+            "tasks": {
+                "Task_37": {
+                    "wcet": 2,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_38": {
+                    "wcet": 1,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_39": {
+                    "wcet": 5,
+                    "period": 300,
+                    "deadline": 300
+                },
+                "Task_40": {
+                    "wcet": 7,
+                    "period": 600,
+                    "deadline": 600
+                },
+                "Task_41": {
+                    "wcet": 3,
+                    "period": 200,
+                    "deadline": 200
+                },
+                "Task_42": {
+                    "wcet": 34,
+                    "period": 1800,
+                    "deadline": 1800
+                },
+                "Task_43": {
+                    "wcet": 17,
+                    "period": 900,
+                    "deadline": 900
+                },
+                "Task_44": {
+                    "wcet": 5,
+                    "period": 400,
+                    "deadline": 400
+                }
+            }
+        },
+        "Thermal_Sensor": {
+            "scheduler": "EDF",
+            "bdr_alpha": 0.3711111111111111,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_45": {
+                    "wcet": 5,
+                    "period": 50,
+                    "deadline": 50
+                },
+                "Task_46": {
+                    "wcet": 2,
+                    "period": 200,
+                    "deadline": 200
+                },
+                "Task_47": {
+                    "wcet": 21,
+                    "period": 200,
+                    "deadline": 200
+                },
+                "Task_48": {
+                    "wcet": 5,
+                    "period": 400,
+                    "deadline": 400
+                }
+            }
+        },
+        "Pressure_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.08913669064748202,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_49": {
+                    "wcet": 2,
+                    "period": 40,
+                    "deadline": 40
+                },
+                "Task_50": {
+                    "wcet": 1,
+                    "period": 50,
+                    "deadline": 50
+                },
+                "Task_51": {
+                    "wcet": 4,
+                    "period": 100,
+                    "deadline": 100
+                }
+            }
+        },
+        "Humidity_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.5028057553956834,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_52": {
+                    "wcet": 56,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_53": {
+                    "wcet": 50,
+                    "period": 400,
+                    "deadline": 400
+                }
+            }
+        },
+        "Temperature_Sensor": {
+            "scheduler": "EDF",
+            "bdr_alpha": 0.5964197530864197,
+            "bdr_delta": 12.0,
+            "schedulable": true,
+            "tasks": {
+                "Task_54": {
+                    "wcet": 2,
+                    "period": 40,
+                    "deadline": 40
+                },
+                "Task_55": {
+                    "wcet": 17,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_56": {
+                    "wcet": 28,
+                    "period": 225,
+                    "deadline": 225
+                },
+                "Task_57": {
+                    "wcet": 2,
+                    "period": 80,
+                    "deadline": 80
+                }
+            }
+        },
+        "Light_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.16873015873015873,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_58": {
+                    "wcet": 4,
+                    "period": 100,
+                    "deadline": 100
+                },
+                "Task_59": {
+                    "wcet": 1,
+                    "period": 50,
+                    "deadline": 50
+                },
+                "Task_60": {
+                    "wcet": 8,
+                    "period": 200,
+                    "deadline": 200
+                }
+            }
+        }
+    }
+}

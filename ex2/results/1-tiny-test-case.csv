@@ -1,0 +1,2 @@
+component_id,component_schedulable,task_summary
+Camera_Sensor,True,"[{'task_name': 'Task_0', 'task_schedulable': True, 'avg_response_time': np.float64(35.483870967741936), 'max_response_time': np.float64(48.38709677419355)}, {'task_name': 'Task_1', 'task_schedulable': True, 'avg_response_time': np.float64(75.80645161290323), 'max_response_time': np.float64(75.80645161290323)}]"

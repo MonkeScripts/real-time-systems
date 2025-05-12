@@ -1,0 +1,92 @@
+[
+    {
+        "test_case": "1-tiny-test-case",
+        "schedulable": true,
+        "expected_unschedulable": false,
+        "match": true,
+        "components": 1,
+        "tasks": 2,
+        "time": 0.012070178985595703
+    },
+    {
+        "test_case": "2-small-test-case",
+        "schedulable": true,
+        "expected_unschedulable": false,
+        "match": true,
+        "components": 2,
+        "tasks": 9,
+        "time": 0.008066654205322266
+    },
+    {
+        "test_case": "3-medium-test-case",
+        "schedulable": true,
+        "expected_unschedulable": false,
+        "match": true,
+        "components": 4,
+        "tasks": 18,
+        "time": 0.009217262268066406
+    },
+    {
+        "test_case": "4-large-test-case",
+        "schedulable": true,
+        "expected_unschedulable": false,
+        "match": true,
+        "components": 7,
+        "tasks": 28,
+        "time": 0.009924173355102539
+    },
+    {
+        "test_case": "5-huge-test-case",
+        "schedulable": true,
+        "expected_unschedulable": false,
+        "match": true,
+        "components": 18,
+        "tasks": 61,
+        "time": 0.012756586074829102
+    },
+    {
+        "test_case": "6-gigantic-test-case",
+        "schedulable": true,
+        "expected_unschedulable": false,
+        "match": true,
+        "components": 34,
+        "tasks": 115,
+        "time": 0.017835378646850586
+    },
+    {
+        "test_case": "7-unschedulable-test-case",
+        "schedulable": false,
+        "expected_unschedulable": true,
+        "match": true,
+        "components": 6,
+        "tasks": 21,
+        "time": 0.008890628814697266
+    },
+    {
+        "test_case": "8-unschedulable-test-case",
+        "schedulable": true,
+        "expected_unschedulable": true,
+        "match": false,
+        "components": 7,
+        "tasks": 28,
+        "time": 0.00976419448852539
+    },
+    {
+        "test_case": "9-unschedulable-test-case",
+        "schedulable": true,
+        "expected_unschedulable": true,
+        "match": false,
+        "components": 18,
+        "tasks": 61,
+        "time": 0.012537717819213867
+    },
+    {
+        "test_case": "10-unschedulable-test-case",
+        "schedulable": true,
+        "expected_unschedulable": true,
+        "match": false,
+        "components": 34,
+        "tasks": 115,
+        "time": 0.017183542251586914
+    }
+]

@@ -1,0 +1,73 @@
+{
+    "system_schedulable": true,
+    "cores": {
+        "Core_1": {
+            "scheduler": "EDF",
+            "speed_factor": 0.62,
+            "schedulable": true
+        }
+    },
+    "components": {
+        "Camera_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.5316129032258065,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_0": {
+                    "wcet": 3,
+                    "period": 150,
+                    "deadline": 150
+                },
+                "Task_1": {
+                    "wcet": 28,
+                    "period": 200,
+                    "deadline": 200
+                },
+                "Task_2": {
+                    "wcet": 2,
+                    "period": 50,
+                    "deadline": 50
+                },
+                "Task_3": {
+                    "wcet": 24,
+                    "period": 300,
+                    "deadline": 300
+                }
+            }
+        },
+        "Image_Processor": {
+            "scheduler": "EDF",
+            "bdr_alpha": 0.28553763440860214,
+            "bdr_delta": 45.0,
+            "schedulable": true,
+            "tasks": {
+                "Task_4": {
+                    "wcet": 2,
+                    "period": 200,
+                    "deadline": 200
+                },
+                "Task_5": {
+                    "wcet": 11,
+                    "period": 200,
+                    "deadline": 200
+                },
+                "Task_6": {
+                    "wcet": 17,
+                    "period": 400,
+                    "deadline": 400
+                },
+                "Task_7": {
+                    "wcet": 13,
+                    "period": 300,
+                    "deadline": 300
+                },
+                "Task_8": {
+                    "wcet": 3,
+                    "period": 150,
+                    "deadline": 150
+                }
+            }
+        }
+    }
+}

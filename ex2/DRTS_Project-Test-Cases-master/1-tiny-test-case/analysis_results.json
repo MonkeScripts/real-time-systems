@@ -1,0 +1,30 @@
+{
+    "system_schedulable": true,
+    "cores": {
+        "Core_1": {
+            "scheduler": "RM",
+            "speed_factor": 0.62,
+            "schedulable": true
+        }
+    },
+    "components": {
+        "Camera_Sensor": {
+            "scheduler": "RM",
+            "bdr_alpha": 0.9938709677419355,
+            "bdr_delta": 0,
+            "schedulable": true,
+            "tasks": {
+                "Task_0": {
+                    "wcet": 14,
+                    "period": 50,
+                    "deadline": 50
+                },
+                "Task_1": {
+                    "wcet": 33,
+                    "period": 100,
+                    "deadline": 100
+                }
+            }
+        }
+    }
+}
